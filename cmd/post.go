@@ -61,8 +61,8 @@ func post(cmd *cobra.Command, args []string) {
 	body, _ := io.ReadAll(resp.Body)
 	var result map[string]interface{}
 	json.Unmarshal(body, &result)
-
-	if result["error"] == "ExpiredToken" {
+	fmt.Println(string(body))
+	if result["error"] == "ExpiredToken" || result["error"] == "InvalidToken" {
 		utils.Refresh(os.Getenv("REFRESH_TOKEN"))
 	}
 	defer resp.Body.Close()

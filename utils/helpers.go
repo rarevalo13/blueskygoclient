@@ -26,7 +26,8 @@ func WriteToEnv(session BluSkySession) {
 			"value": fmt.Sprintf("%s", session.RefreshJwt),
 		},
 	}
-	f, err := os.OpenFile(".env", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+
+	f, err := os.OpenFile(".env", os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		fmt.Printf("Error opening %s, not found, creating it.", err)
 
@@ -39,7 +40,9 @@ func WriteToEnv(session BluSkySession) {
 }
 
 func Refresh(refreshToken string) {
+
 	var refreshSession BluSkySession
+
 	rootURL := "https://bsky.social"
 	createSession := "/xrpc/com.atproto.server.refreshSession"
 	req, err := http.NewRequest(http.MethodPost, rootURL+createSession, nil)
@@ -65,9 +68,28 @@ func Refresh(refreshToken string) {
 	if err != nil {
 		log.Printf("There has been an error %s", err)
 	}
+	tokens := []map[string]string{
+		{
+			"key":   "ACCESS_TOKEN",
+			"value": fmt.Sprintf("%s", refreshSession.AccessJwt),
+		},
+		{
+			"key":   "REFRESH_TOKEN",
+			"value": fmt.Sprintf("%s", refreshSession.RefreshJwt),
+		},
+	}
 
 	fmt.Println(refreshSession)
-	//utils.WriteToEnv(session)
+	f, err := os.OpenFile(".env", os.O_WRONLY, 0644)
+	if err != nil {
+		fmt.Printf("Error opening %s, not found, creating it.", err)
+
+	}
+	defer f.Close()
+	for _, token := range tokens {
+		f.WriteString(token["key"] + "=" + token["value"] + "\n")
+	}
+
 }
 
 // maybe rework this to read from a .env
